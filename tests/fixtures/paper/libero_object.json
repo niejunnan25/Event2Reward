@@ -1,0 +1,97 @@
+{
+  "max_steps": 500,
+  "warmup_steps": 25,
+  "seed": 42,
+  "per_device_batch_size": 10,
+  "gradient_accumulation_steps": 4,
+  "goal_dropout": 0.0,
+  "require_goal_present": true,
+  "image_size": 224,
+  "max_pixels": 50176,
+  "language_learning_rate": 2e-06,
+  "vision_learning_rate": 5e-07,
+  "head_learning_rate": 1e-05,
+  "vision_train_last_n_layers": 3,
+  "train_vision_merger": true,
+  "lambda_progress": 1.0,
+  "lambda_trend": 1.0,
+  "lambda_relation": 10.0,
+  "event_progress_objective": "relation_only",
+  "train_sources": [
+    {
+      "family": "expert_task00",
+      "role": "expert",
+      "clip_fraction": 0.05
+    },
+    {
+      "family": "expert_task01",
+      "role": "expert",
+      "clip_fraction": 0.05
+    },
+    {
+      "family": "expert_task02",
+      "role": "expert",
+      "clip_fraction": 0.05
+    },
+    {
+      "family": "expert_task03",
+      "role": "expert",
+      "clip_fraction": 0.05
+    },
+    {
+      "family": "expert_task04",
+      "role": "expert",
+      "clip_fraction": 0.05
+    },
+    {
+      "family": "expert_task05",
+      "role": "expert",
+      "clip_fraction": 0.05
+    },
+    {
+      "family": "expert_task06",
+      "role": "expert",
+      "clip_fraction": 0.05
+    },
+    {
+      "family": "expert_task07",
+      "role": "expert",
+      "clip_fraction": 0.05
+    },
+    {
+      "family": "expert_task08",
+      "role": "expert",
+      "clip_fraction": 0.05
+    },
+    {
+      "family": "expert_task09",
+      "role": "expert",
+      "clip_fraction": 0.05
+    },
+    {
+      "family": "event_kind3",
+      "role": "event",
+      "clip_fraction": 0.125
+    },
+    {
+      "family": "event_kind4",
+      "role": "event",
+      "clip_fraction": 0.125
+    },
+    {
+      "family": "event_kind5",
+      "role": "event",
+      "clip_fraction": 0.125
+    },
+    {
+      "family": "event_kind6",
+      "role": "event",
+      "clip_fraction": 0.125
+    },
+    {
+      "family": "expert_fill",
+      "role": "expert_fill",
+      "clip_fraction": 0.0
+    }
+  ]
+}

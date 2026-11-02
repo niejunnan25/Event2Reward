@@ -1,0 +1,108 @@
+# LIBERO-10 fine-tuning, as run for the paper's LIBERO-10 reward model.
+#
+# Starts from Stage2 and updates the language model, the last 3 vision blocks,
+# the vision merger and both heads. The paper run used 2 GPUs: each optimizer
+# step sees 2 GPUs x 4 microbatches x 10 clips = 80 clips, half from successful
+# expert demonstrations (5% per task), half from event groups (12.5% per kind).
+# On one GPU, set training.accumulation: 8 for the same 80 clips per step.
+# Event kinds: 3 no further progress, 4 unrecovered regression, 5 progress stall, 6 regression and recovery.
+#
+# Run from the repository root:
+#   event2reward train --gpus 2 configs/finetune/libero/libero_10.yaml
+# Paths are relative to where you run the command; override any value with
+#   --set model_path=/data/models/Stage2
+
+model_path: models/Stage2                     # bash scripts/download_models.sh
+output_dir: outputs/libero/libero_10
+
+data:
+  format: index                               # index | trajectories: which block below is used
+  manifest: data/libero/libero_10/dataset.json  # docs/data.md
+  image_size: 224                             # frames are center-cropped to this square size
+  max_pixels: 50176
+
+  index:                                      # used when format: index
+    goal_dropout: 0.0                         # share of clips shown without their goal image
+    require_goal_present: true                # every clip must have an independent goal
+    sources:                                  # fraction: share of the clips in each microbatch
+      - {family: expert_task00, type: relation, role: expert, fraction: 0.05}
+      - {family: expert_task01, type: relation, role: expert, fraction: 0.05}
+      - {family: expert_task02, type: relation, role: expert, fraction: 0.05}
+      - {family: expert_task03, type: relation, role: expert, fraction: 0.05}
+      - {family: expert_task04, type: relation, role: expert, fraction: 0.05}
+      - {family: expert_task05, type: relation, role: expert, fraction: 0.05}
+      - {family: expert_task06, type: relation, role: expert, fraction: 0.05}
+      - {family: expert_task07, type: relation, role: expert, fraction: 0.05}
+      - {family: expert_task08, type: relation, role: expert, fraction: 0.05}
+      - {family: expert_task09, type: relation, role: expert, fraction: 0.05}
+      - {family: event_kind3, type: relation, role: event, fraction: 0.125}
+      - {family: event_kind4, type: relation, role: event, fraction: 0.125}
+      - {family: event_kind5, type: relation, role: event, fraction: 0.125}
+      - {family: event_kind6, type: relation, role: event, fraction: 0.125}
+      - {family: expert_fill, type: relation, role: fill, fraction: 0.0}
+
+  trajectories:                               # used when format: trajectories
+    task: null                                # one task of the manifest; null: every task
+    history_offsets: [4, 2, 1, 0.25, 0]       # five history frames, seconds before the query
+    training_history_scales: [1.0]            # random rescaling of the offsets in training
+    sampling:                                 # queries per microbatch, summing to training.batch_size
+      progress:                               # frames with an absolute progress target
+        expert: 3                             # clean demonstrations: time / completion time
+        stall_success: 1                      # extra: successful trajectories with progress stalls, stall time removed
+        completion: 1                         # completion frames of successful trajectories: 1
+      relations:                              # event groups: no progress target, only the event's relation
+        groups: 1                             # each an anchor frame plus ...
+        members: 4                            # ... frames inside the event
+        balance: type                         # type | trajectory: which takes equal turns
+
+tuning:
+  mode: full                                  # full | lora: which block below is used
+  full:                                       # used when mode: full
+    language: true                            # train the language model
+    vision_layers: 3                          # last N vision blocks; 0: frozen; all: every block
+    vision_merger: true
+  lora:                                       # used when mode: lora
+    layers: [24, 25, 26, 27, 28, 29, 30, 31]  # language layers with adapters (of 32)
+    rank: 8
+    alpha: 16
+    dropout: 0.05
+  heads:
+    progress: true                            # train the progress head
+    trend: true                               # train the trend head; true exactly when loss.trend > 0
+    fp32: false                               # keep the heads in FP32
+
+optimizer:
+  lr:
+    language: 2.0e-6                          # used when mode: full
+    vision: 5.0e-7                            # used when mode: full
+    lora: 1.0e-4                              # used when mode: lora
+    heads: 1.0e-5
+  weight_decay: 0.01
+  grad_clip: 1.0
+  fp32_master_weights: false                  # update FP32 copies of BF16 weights
+  fused: false                                # fused AdamW kernel
+
+loss:
+  progress: 1.0
+  trend: 1.0
+  relation: 10.0
+  completion_weight: 1.0                      # trajectories: weight of completion queries
+  terminal_weight: 1.0                        # trajectories: weight of terminal-failure relations
+
+training:
+  steps: 500                                  # optimizer steps to run
+  schedule_steps: 500                         # length of the warmup + cosine learning-rate schedule
+  warmup_steps: 25
+  batch_size: 10                              # clips per microbatch per GPU
+  accumulation: 4                             # microbatches per GPU per optimizer step
+  seed: 42
+  precision: bf16                             # bf16 | fp32
+  attention: sdpa                             # sdpa | eager
+  gradient_checkpointing: true
+  save_every: 50                              # save every N steps, or list them in save_steps
+  save_steps: null
+  keep_optimizer_states: 1                    # latest checkpoints that can be resumed
+  log_every: 10
+  num_workers: 2                              # data-loader workers (index data)
+  prefetch_factor: 2
+  resume_from: null                           # a checkpoint directory to continue from

@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+build/
+.venv/
+.DS_Store
+
+# Downloaded models, datasets and run outputs
+/models/
+/data/
+/outputs/

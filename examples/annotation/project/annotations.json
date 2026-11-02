@@ -1,0 +1,44 @@
+{
+ "soup_and_sauce/success/demo_199": {
+  "label": "success",
+  "events": [],
+  "final_frame": 249,
+  "saved_at": "2026-11-01T09:52:16+00:00"
+ },
+ "soup_and_sauce/success/demo_008": {
+  "label": "success",
+  "events": [],
+  "final_frame": 258,
+  "saved_at": "2026-11-01T09:52:16+00:00"
+ },
+ "soup_and_sauce/success/demo_340": {
+  "label": "regression_and_recovery",
+  "events": [
+   {
+    "type": "regression_and_recovery",
+    "a_frame": 169,
+    "r_frame": 210
+   }
+  ],
+  "final_frame": 281,
+  "saved_at": "2026-11-01T09:52:16+00:00"
+ },
+ "soup_and_sauce/failure/rollout_484": {
+  "label": "unrecovered_regression",
+  "events": [
+   {
+    "type": "unrecovered_regression",
+    "a_frame": 261,
+    "loss_frame": 270
+   }
+  ],
+  "final_frame": 519,
+  "saved_at": "2026-11-01T09:52:16+00:00"
+ },
+ "soup_and_sauce/success/rollout_502": {
+  "label": "success",
+  "events": [],
+  "final_frame": 252,
+  "saved_at": "2026-11-01T09:52:16+00:00"
+ }
+}

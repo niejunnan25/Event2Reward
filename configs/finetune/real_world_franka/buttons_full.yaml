@@ -1,0 +1,91 @@
+# Real-world Franka, Press Buttons: the reward model of this DSRL task in the paper.
+#
+# The training parameters are those of the LIBERO models (configs/finetune/libero/);
+# only the data is smaller. Starts from Stage2 and updates the language model,
+# the last 3 vision blocks, the vision merger and both heads for 500 steps of
+# 80 clips, half from clean demonstrations (absolute progress), half from
+# event groups (relations). The trajectories are given in the trajectory
+# format (docs/data.md). As in the paper run, event trajectories take equal
+# turns (relations.balance: trajectory).
+#
+#   event2reward train configs/finetune/real_world_franka/buttons_full.yaml
+
+model_path: models/Stage2                     # bash scripts/download_models.sh
+output_dir: outputs/real_world_franka/buttons_full
+
+data:
+  format: trajectories                        # index | trajectories: which block below is used
+  manifest: data/real_world_franka/dataset.json  # docs/data.md
+  image_size: 224                             # frames are center-cropped to this square size
+  max_pixels: 50176
+
+  index:                                      # used when format: index
+    goal_dropout: 0.0                         # share of clips shown without their goal image
+    require_goal_present: false               # every clip must have an independent goal
+    sources: []                               # fraction: share of the clips in each microbatch
+
+  trajectories:                               # used when format: trajectories
+    task: buttons                             # one task of the manifest; null: every task
+    history_offsets: [0.4, 0.3, 0.2, 0.1, 0]  # five history frames, seconds before the query
+    training_history_scales: [1.0]            # random rescaling of the offsets in training
+    sampling:                                 # queries per microbatch, summing to training.batch_size
+      progress:                               # frames with an absolute progress target
+        expert: 5                             # clean demonstrations: time / completion time
+        stall_success: 0                      # extra: successful trajectories with progress stalls, stall time removed
+        completion: 0                         # completion frames of successful trajectories: 1
+      relations:                              # event groups: no progress target, only the event's relation
+        groups: 1                             # each an anchor frame plus ...
+        members: 4                            # ... frames inside the event
+        balance: trajectory                   # type | trajectory: which takes equal turns
+
+tuning:
+  mode: full                                  # full | lora: which block below is used
+  full:                                       # used when mode: full
+    language: true                            # train the language model
+    vision_layers: 3                          # last N vision blocks; 0: frozen; all: every block
+    vision_merger: true
+  lora:                                       # used when mode: lora
+    layers: [24, 25, 26, 27, 28, 29, 30, 31]  # language layers with adapters (of 32)
+    rank: 8
+    alpha: 16
+    dropout: 0.05
+  heads:
+    progress: true                            # train the progress head
+    trend: true                               # train the trend head; true exactly when loss.trend > 0
+    fp32: false                               # keep the heads in FP32
+
+optimizer:
+  lr:
+    language: 2.0e-6                          # used when mode: full
+    vision: 5.0e-7                            # used when mode: full
+    lora: 1.0e-4                              # used when mode: lora
+    heads: 1.0e-5
+  weight_decay: 0.01
+  grad_clip: 1.0
+  fp32_master_weights: false                  # update FP32 copies of BF16 weights
+  fused: false                                # fused AdamW kernel
+
+loss:
+  progress: 1.0
+  trend: 1.0
+  relation: 10.0
+  completion_weight: 1.0                      # trajectories: weight of completion queries
+  terminal_weight: 1.0                        # trajectories: weight of terminal-failure relations
+
+training:
+  steps: 500                                  # optimizer steps to run
+  schedule_steps: 500                         # length of the warmup + cosine learning-rate schedule
+  warmup_steps: 25
+  batch_size: 10                              # clips per microbatch per GPU
+  accumulation: 8                             # microbatches per GPU per optimizer step
+  seed: 42
+  precision: bf16                             # bf16 | fp32
+  attention: sdpa                             # sdpa | eager
+  gradient_checkpointing: true
+  save_every: 50                              # save every N steps, or list them in save_steps
+  save_steps: null
+  keep_optimizer_states: 1                    # latest checkpoints that can be resumed
+  log_every: 10
+  num_workers: 0                              # data-loader workers (index data)
+  prefetch_factor: 2
+  resume_from: null                           # a checkpoint directory to continue from

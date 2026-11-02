@@ -1,0 +1,15 @@
+Event2Reward
+The project owner's original code and derivative model weights are released
+under the Apache License, Version 2.0. Third-party works retain their own terms.
+
+Qwen3.5-4B
+The Event2Reward model checkpoints derive from Qwen3.5-4B, developed by the Qwen team.
+Upstream: https://huggingface.co/Qwen/Qwen3.5-4B
+The upstream license text is preserved in LICENSES/Qwen3.5-4B.txt and in model
+bundles. Event2Reward adds progress/trend heads and event-supervised training.
+
+Dependencies and datasets
+PyTorch, Transformers, Accelerate and other separately installed dependencies
+retain their respective licenses. Original videos and third-party annotations
+are not covered by the project's Apache-2.0 grant. Dataset-specific terms and
+provenance must accompany a separately published annotation release.

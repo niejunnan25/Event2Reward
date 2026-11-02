@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Event2Reward annotation</title>
+    <link rel="stylesheet" href="style.css" />
+    <script>
+      // Light by default; the theme button switches, and the choice is remembered.
+      document.documentElement.dataset.theme = localStorage.getItem("e2r-annotation:theme") === "dark" ? "dark" : "light";
+    </script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand-block">
+        <div class="brand-mark" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </div>
+        <div>
+          <h1>Event2Reward</h1>
+          <p id="brandSubtitle"></p>
+        </div>
+      </div>
+
+      <div class="top-progress">
+        <div class="progress-copy">
+          <span id="progressLabel"></span>
+          <strong id="progressNumbers">0 / 0</strong>
+        </div>
+        <div class="progress-track" aria-hidden="true">
+          <div id="progressFill" class="progress-fill"></div>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button id="themeButton" class="button ghost theme-button" type="button"></button>
+        <button id="languageButton" class="button ghost language-button" type="button"></button>
+        <button id="helpButton" class="button ghost" type="button" data-i18n="help"></button>
+        <a id="exportButton" class="button secondary" href="/api/export.jsonl" data-i18n="export"></a>
+      </div>
+    </header>
+
+    <main class="app-shell">
+      <aside class="queue-panel">
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">DATA QUEUE</span>
+            <h2 data-i18n="queue"></h2>
+          </div>
+          <span id="filteredCount" class="count-pill">0</span>
+        </div>
+
+        <div class="queue-filters">
+          <div id="modeSwitch" class="segmented-control mode-switch" role="tablist">
+            <button type="button" data-mode="success" data-i18n="mode_success"></button>
+            <button type="button" data-mode="failure" data-i18n="mode_failure"></button>
+          </div>
+
+          <div class="filter-row">
+            <label class="field compact-field">
+              <span data-i18n="task"></span>
+              <select id="taskFilter"></select>
+            </label>
+            <label class="field compact-field">
+              <span data-i18n="status"></span>
+              <select id="statusFilter">
+                <option value="all" data-i18n="status_all"></option>
+                <option value="pending" data-i18n="status_pending"></option>
+                <option value="draft" data-i18n="status_draft"></option>
+                <option value="approved" data-i18n="status_approved"></option>
+                <option value="event" data-i18n="status_event"></option>
+              </select>
+            </label>
+          </div>
+
+          <label class="search-field">
+            <span aria-hidden="true">⌕</span>
+            <input id="searchInput" type="search" data-i18n-placeholder="search" />
+          </label>
+        </div>
+
+        <div id="queueList" class="queue-list" role="listbox"></div>
+      </aside>
+
+      <section class="review-workspace">
+        <article class="video-card">
+          <div class="episode-header">
+            <div>
+              <div class="episode-title-line">
+                <span id="taskBadge" class="task-badge"></span>
+                <h2 id="episodeTitle"></h2>
+                <span id="bucketBadge" class="bucket-badge"></span>
+              </div>
+              <p id="episodeMeta" class="episode-meta"></p>
+            </div>
+            <div class="episode-nav">
+              <button id="previousButton" class="icon-button" type="button" title="J">←</button>
+              <span id="episodePosition">0 / 0</span>
+              <button id="nextButton" class="icon-button" type="button" title="K">→</button>
+            </div>
+          </div>
+
+          <div id="viewSwitcher" class="view-switcher" hidden>
+            <div id="viewButtons" class="segmented-control compact-segments"></div>
+          </div>
+
+          <div class="video-stage">
+            <video id="video" preload="auto" playsinline muted></video>
+            <div id="videoEmptyState" class="video-empty" hidden>
+              <strong data-i18n="video_missing"></strong>
+              <p data-i18n="video_missing_hint"></p>
+            </div>
+            <div class="frame-readout">
+              <span>FRAME</span>
+              <strong id="frameReadout">0</strong>
+              <span id="frameTotal">/ 0</span>
+            </div>
+          </div>
+
+          <div class="timeline-block">
+            <div id="timeline" class="timeline" role="slider" tabindex="0">
+              <div class="timeline-base"></div>
+              <div id="timelineProgress" class="timeline-progress"></div>
+              <div id="timelineRegions" class="timeline-regions"></div>
+              <div id="timelineMarkers" class="timeline-markers"></div>
+              <div id="timelinePlayhead" class="timeline-playhead"></div>
+            </div>
+            <div class="timeline-scale" aria-hidden="true">
+              <span>F0</span>
+              <span id="timelineMidpoint">F0</span>
+              <span id="timelineEndpoint">F0</span>
+            </div>
+          </div>
+
+          <div class="transport-controls">
+            <div class="transport-primary">
+              <button id="jumpBackButton" class="transport-button" type="button" title="Shift + ←">−5</button>
+              <button id="stepBackButton" class="transport-button" type="button" title="←">−1</button>
+              <button id="playButton" class="play-button" type="button" title="Space">▶</button>
+              <button id="stepForwardButton" class="transport-button" type="button" title="→">+1</button>
+              <button id="jumpForwardButton" class="transport-button" type="button" title="Shift + →">+5</button>
+            </div>
+            <div class="transport-secondary">
+              <label>
+                <span data-i18n="jump_frame"></span>
+                <input id="frameInput" type="number" min="0" step="1" value="0" />
+              </label>
+              <label>
+                <span>FPS</span>
+                <input id="fpsInput" type="text" value="" readonly />
+              </label>
+              <label>
+                <span data-i18n="speed"></span>
+                <select id="speedSelect">
+                  <option value="0.25">0.25×</option>
+                  <option value="0.5">0.5×</option>
+                  <option value="1" selected>1×</option>
+                  <option value="1.5">1.5×</option>
+                  <option value="2">2×</option>
+                  <option value="4">4×</option>
+                </select>
+              </label>
+            </div>
+          </div>
+        </article>
+
+        <article class="curve-card">
+          <div class="curve-heading">
+            <div>
+              <span class="eyebrow">RULE PREVIEW</span>
+              <h3 data-i18n="curve_title"></h3>
+            </div>
+            <div id="curveLegend" class="curve-legend">
+              <span><i class="legend-line"></i><span data-i18n="curve_legend_rule"></span></span>
+              <span><i class="legend-playhead"></i><span data-i18n="curve_legend_now"></span></span>
+            </div>
+          </div>
+          <div class="curve-canvas-wrap">
+            <canvas id="curveCanvas"></canvas>
+            <div class="curve-axis-y"><span>1.0</span><span data-i18n="axis_progress"></span><span>0.0</span></div>
+            <div class="curve-axis-x"><span data-i18n="axis_start"></span><span data-i18n="axis_time"></span><span data-i18n="axis_end"></span></div>
+          </div>
+          <p id="curveMessage" class="curve-message"></p>
+        </article>
+      </section>
+
+      <aside class="annotation-panel">
+        <div class="panel-heading sticky-heading">
+          <div>
+            <span class="eyebrow">ANNOTATION</span>
+            <h2 id="annotationHeading"></h2>
+          </div>
+          <span id="saveState" class="save-state"></span>
+        </div>
+
+        <div id="labelCards" class="label-cards"></div>
+
+        <section id="pointEditor" class="point-editor empty-editor"></section>
+
+        <section id="endpointEditor" class="endpoint-editor"></section>
+
+        <div id="validationMessage" class="validation-message" role="status" hidden></div>
+
+        <div class="annotation-actions">
+          <button id="saveButton" class="button primary" type="button" data-i18n="save"></button>
+        </div>
+        <button id="clearButton" class="clear-button" type="button" data-i18n="clear"></button>
+      </aside>
+    </main>
+
+    <dialog id="helpDialog" class="help-dialog">
+      <div class="dialog-header">
+        <div>
+          <span class="eyebrow">ANNOTATION GUIDE</span>
+          <h2 data-i18n="help_title"></h2>
+        </div>
+        <button id="closeHelpButton" class="icon-button" type="button">×</button>
+      </div>
+      <div id="helpContent" class="help-content"></div>
+    </dialog>
+
+    <script src="i18n.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

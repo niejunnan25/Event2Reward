@@ -1,0 +1,61 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "event2reward"
+version = "1.0.0"
+description = "Event2Reward: learning robotic rewards from progress relations"
+authors = [
+  {name = "Junnan Nie"},
+  {name = "Zitian Fan"},
+  {name = "Jiachen Zhang"},
+  {name = "Junyi Lao"},
+  {name = "Likui Zhang"},
+  {name = "Chenghao Liu"},
+  {name = "Xiaoyang Lu"},
+  {name = "Yunbo Wang"},
+  {name = "Yixue Zhang"},
+  {name = "Linbo Zhai"},
+  {name = "Jiayi Li"},
+  {name = "Mengzhe Wang"},
+  {name = "Xichang Wu"},
+  {name = "Bin Wang"},
+  {name = "Chang Liu"},
+  {name = "Tianle Zhang"},
+  {name = "Songfang Huang"},
+]
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.10,<3.14"
+dependencies = [
+  "torch==2.8.0", "transformers==5.2.0", "accelerate>=1.9,<2",
+  "safetensors>=0.6,<1", "numpy>=1.26,<3", "pillow>=10,<13",
+  "torchvision>=0.23,<0.24",
+  "pyyaml>=6,<7", "huggingface-hub>=1.3,<2",
+]
+
+[project.optional-dependencies]
+train = ["av>=14,<16", "qwen-vl-utils==0.0.14"]
+dev = ["pytest>=8", "build"]
+video = ["av>=14,<16"]
+
+[project.urls]
+Homepage = "https://niejunnan25.github.io/Event2Reward/"
+Paper = "https://arxiv.org/abs/2610.39212"
+Repository = "https://github.com/niejunnan25/Event2Reward"
+Documentation = "https://github.com/niejunnan25/Event2Reward/tree/main/docs"
+
+[project.scripts]
+event2reward = "event2reward.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["event2reward*"]
+exclude = ["tests*"]
+
+[tool.setuptools.package-data]
+"event2reward.annotation" = ["web/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

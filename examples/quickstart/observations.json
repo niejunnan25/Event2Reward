@@ -1,0 +1,14 @@
+[
+  {
+    "task": "pick up the black bowl from table center and place it on the plate",
+    "start": "start.png",
+    "goal": "goal.png",
+    "history": [
+      "h0.png",
+      "h1.png",
+      "h2.png",
+      "h3.png",
+      "h4.png"
+    ]
+  }
+]
